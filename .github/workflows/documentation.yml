@@ -1,35 +1,13 @@
 name: Documentation
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/documentation.yml'
-      - 'package.json'
-      - 'docs/**'
-      - 'lib'
-      - 'test'
-      - 'scripts/website.js'
-      - 'CHANGELOG.md'
-      - 'CONTRIBUTING.md'
-      - 'index.pug'
-  push:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/documentation.yml'
-      - 'package.json'
-      - 'docs/**'
-      - 'lib'
-      - 'test'
-      - 'scripts/website.js'
-      - 'CHANGELOG.md'
-      - 'CONTRIBUTING.md'
-      - 'index.pug'
+  workflow_dispatch:
 permissions:
   contents: read
 
 jobs:
   lint-documentation:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     name: Lint Markdown files
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -50,6 +28,7 @@ jobs:
 
   test-documentation:
     runs-on: ubuntu-22.04
+    timeout-minutes: 20
     name: Test Generating Docs
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

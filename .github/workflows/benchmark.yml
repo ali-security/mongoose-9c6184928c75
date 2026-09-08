@@ -1,25 +1,13 @@
 name: TypeScript Benchmark
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/benchmark.yml"
-      - "package.json"
-      - "types/**"
-      - "benchmarks/typescript/**"
-  push:
-    branches:
-      - master
-    paths:
-      - ".github/workflows/benchmark.yml"
-      - "package.json"
-      - "types/**"
-      - "benchmarks/typescript/**"
+  workflow_dispatch:
 permissions:
   contents: read
 
 jobs:
   typescript:
     runs-on: ubuntu-22.04
+    timeout-minutes: 20
     name: Benchmark TypeScript Types
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

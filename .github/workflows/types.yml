@@ -1,23 +1,13 @@
 name: Typescript Types
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/types.yml'
-      - 'package.json'
-      - 'types/**'
-      - 'test/types/**'
-  push:
-    paths:
-      - '.github/workflows/types.yml'
-      - 'package.json'
-      - 'types/**'
-      - 'test/types/**'
+  workflow_dispatch:
 permissions:
   contents: read
 
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     name: Lint TS-Files
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -36,6 +26,7 @@ jobs:
     needs:
       - lint
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     name: Test Typescript Types
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

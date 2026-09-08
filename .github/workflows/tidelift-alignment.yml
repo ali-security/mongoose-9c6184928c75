@@ -1,9 +1,6 @@
 name: Tidelift Alignment
 on:
-  push:
-    paths:
-      - '.github/workflows/tidelift-alignment.yml'
-      - 'package.json'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,6 +9,7 @@ jobs:
   build:
     name: Run Tidelift to ensure approved open source packages are in use
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     if: github.repository == 'Automattic/mongoose'
     steps:
       - name: Checkout

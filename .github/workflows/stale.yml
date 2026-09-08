@@ -1,7 +1,5 @@
 name: "Close stale issues"
 on:
-  schedule:
-    - cron: "0 0 * * *"
   workflow_dispatch:
 permissions:
   issues: write
@@ -9,6 +7,7 @@ permissions:
 jobs:
   stale:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: stale
         uses: actions/stale@v10

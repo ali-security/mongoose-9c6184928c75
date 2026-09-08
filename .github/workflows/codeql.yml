@@ -1,19 +1,13 @@
 name: "Code Scanning - Action"
 
 on:
-  pull_request:
-    paths:
-      - 'lib/**'
-  push:
-    branches:
-      - master
-    paths:
-      - 'lib/**'
+  workflow_dispatch:
 
 jobs:
   CodeQL-Build:
     # CodeQL runs on ubuntu-latest, windows-latest, and macos-latest
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     permissions:
       # required for all workflows

@@ -1,23 +1,7 @@
 name: Encryption Tests
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/encryption-tests.yml"
-      - "package.json"
-      - "index.js"
-      - "lib/**"
-      - "test/encryption/**.js"
-      - "scripts/setup-encryption-tests.js"
-  push:
-    paths:
-      - ".github/workflows/encryption-tests.yml"
-      - "package.json"
-      - "index.js"
-      - "lib/**"
-      - "test/encryption/**.js"
-      - "scripts/setup-encryption-tests.js"
-  workflow_dispatch: {}
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -32,6 +16,7 @@ jobs:
       id-token: write
       contents: write
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     name: Encryption tests
     env:
       FORCE_COLOR: true

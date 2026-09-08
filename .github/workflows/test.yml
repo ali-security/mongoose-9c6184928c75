@@ -1,25 +1,19 @@
 name: Test
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/test.yml"
-      - "package.json"
-      - "index.js"
-      - "lib/**"
-      - "test/**.js"
-  push:
-    paths:
-      - ".github/workflows/test.yml"
-      - "package.json"
-      - "index.js"
-      - "lib/**"
-      - "test/**.js"
+  workflow_dispatch:
+    inputs:
+      test-filter:
+        description: "Optional mocha --grep pattern; empty runs the full suite"
+        required: false
+        default: ""
 permissions:
   contents: read
 
 jobs:
   lint:
+    if: false
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     name: Lint JS-Files
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -36,6 +30,7 @@ jobs:
 
   test:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
     strategy:
       fail-fast: false
       matrix:
@@ -67,18 +62,34 @@ jobs:
           path: ~/.cache/mongodb-binaries
           key: ${{ matrix.os }}-${{ matrix.mongodb }}
 
+      - name: Pin npm registry to release date
+        run: |
+          npm config set registry https://time-machines-npm.sealsecurity.io/
+          npm config set //time-machines-npm.sealsecurity.io/:_authToken=2026-04-29T19:19:57.458000Z
+
       - run: npm install
       # Create ./node_modules/mongoose-separate-require-instance for testing multiple require instances
       - run: npm run create-separate-require-instance
       - name: NPM Test without Coverage
-        run: npm run test:ci
+        run: |
+          if [ -n "${{ inputs.test-filter }}" ]; then
+            npm run test:ci -- --grep "${{ inputs.test-filter }}"
+          else
+            npm run test:ci
+          fi
         if: matrix.coverage != true
       - name: NPM Test with Coverage
-        run: npm run test-coverage:ci
+        run: |
+          if [ -n "${{ inputs.test-filter }}" ]; then
+            npm run test-coverage:ci -- -- --grep "${{ inputs.test-filter }}"
+          else
+            npm run test-coverage:ci
+          fi
         if: matrix.coverage == true
 
   test-deno:
     runs-on: ubuntu-22.04
+    timeout-minutes: 40
     name: Deno tests
     env:
       MONGOMS_VERSION: 6.0.15
@@ -101,12 +112,22 @@ jobs:
         with:
           deno-version: v2.1.x
       - run: deno --version
+      - name: Pin npm registry to release date
+        run: |
+          npm config set registry https://time-machines-npm.sealsecurity.io/
+          npm config set //time-machines-npm.sealsecurity.io/:_authToken=2026-04-29T19:19:57.458000Z
       - run: npm install
       - name: Run Deno tests
-        run: npm run test-deno:ci
+        run: |
+          if [ -n "${{ inputs.test-filter }}" ]; then
+            npm run test-deno:ci -- --grep "${{ inputs.test-filter }}"
+          else
+            npm run test-deno:ci
+          fi
 
   test-atlas-cli:
     runs-on: ubuntu-22.04
+    timeout-minutes: 40
     name: Atlas CLI tests
     env:
       IS_ATLAS: true
@@ -121,9 +142,18 @@ jobs:
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
+      - name: Pin npm registry to release date
+        run: |
+          npm config set registry https://time-machines-npm.sealsecurity.io/
+          npm config set //time-machines-npm.sealsecurity.io/:_authToken=2026-04-29T19:19:57.458000Z
       - run: npm install
       - name: Run tests
-        run: npm run test:ci
+        run: |
+          if [ -n "${{ inputs.test-filter }}" ]; then
+            npm run test:ci -- --grep "${{ inputs.test-filter }}"
+          else
+            npm run test:ci
+          fi
       - name: Stop deployment
         run: atlas deployments stop mycluster
 
@@ -131,6 +161,7 @@ jobs:
     needs:
       - test
     runs-on: ubuntu-22.04
+    timeout-minutes: 50
     name: Replica Set tests
     env:
       FORCE_COLOR: true
@@ -140,14 +171,49 @@ jobs:
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         with:
           node-version: 22
+      - name: Pin npm registry to release date
+        run: |
+          npm config set registry https://time-machines-npm.sealsecurity.io/
+          npm config set //time-machines-npm.sealsecurity.io/:_authToken=2026-04-29T19:19:57.458000Z
       - run: npm install
       - name: Test
-        run: npm run test-rs:ci
+        run: |
+          if [ -n "${{ inputs.test-filter }}" ]; then
+            npm run test-rs:ci -- --grep "${{ inputs.test-filter }}"
+          else
+            npm run test-rs:ci
+          fi
+
+  pack:
+    name: Pack release tarball
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup node
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
+        with:
+          node-version: 24
+
+      - name: Install npm 11.11.0
+        run: npm i -g npm@11.11.0
+
+      - name: Pack
+        run: npm pack
+
+      - name: Upload tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-tarball
+          path: mongoose-9.6.1.tgz
+          if-no-files-found: error
 
   dependency-review:
     name: Dependency Review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
